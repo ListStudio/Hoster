@@ -5,8 +5,98 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>hoster</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M17.5 19a4.5 4.5 0 0 0 .5-8.97A6 6 0 0 0 6.34 9.5 5 5 0 0 0 7 19h10.5z' fill='%2379c0ff' stroke='%231f6feb' stroke-width='1.5'/></svg>">
-<link rel="stylesheet" href="/static/style.css">
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<style>
+:root{--bg:#0a1420;--bg2:#0f1c2e;--bg3:#060e18;--bd:#1f3450;--tx:#cfe2f5;--mu:#6b8cae;--bl:#79c0ff;--bl2:#1f6feb;--bl3:#0d419d;--gr:#3fb950;--rd:#f85149;--pu:#a5a8ff;--glow:rgba(121,192,255,.35)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a1420;background-image:radial-gradient(ellipse at 20% 0%,rgba(31,111,235,.18),transparent 55%),radial-gradient(ellipse at 80% 100%,rgba(121,192,255,.10),transparent 55%);background-attachment:fixed;color:var(--tx);font-family:Consolas,Menlo,monospace;font-size:13px;min-height:100vh}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--bd);background:rgba(15,28,46,.85);backdrop-filter:blur(10px);position:sticky;top:0;z-index:10}
+.logo{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:600}
+.logo svg{filter:drop-shadow(0 0 8px var(--glow))}
+.brand{background:linear-gradient(135deg,#79c0ff,#1f6feb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:.3px}
+.logo .badge{font-size:10px;font-weight:400;background:rgba(121,192,255,.12);color:var(--bl);padding:2px 8px;border-radius:10px;border:1px solid rgba(121,192,255,.3)}
+nav{display:flex;gap:4px}
+nav button,nav a{background:transparent;border:1px solid transparent;color:var(--mu);font-family:inherit;font-size:13px;padding:6px 12px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none;transition:all .15s}
+nav button:hover,nav a:hover{color:var(--bl);background:rgba(121,192,255,.08)}
+nav button.active{color:var(--bl);background:rgba(121,192,255,.12);border-color:rgba(121,192,255,.35);box-shadow:0 0 12px rgba(121,192,255,.15)}
+nav .logout{color:var(--rd)}
+main{padding:24px;max-width:1500px;margin:0 auto}
+.tab{display:none}
+.tab.active{display:block;animation:fade .2s}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:20px;box-shadow:0 0 0 1px rgba(121,192,255,.02),0 4px 24px rgba(0,0,0,.4)}
+.card h2{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--bd);color:var(--bl)}
+label{display:block;color:var(--mu);font-size:11px;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 6px}
+label b{color:var(--bl);font-weight:600}
+input[type=text],input[type=number],input[type=password]{width:100%;background:var(--bg3);border:1px solid var(--bd);color:var(--tx);font-family:inherit;font-size:13px;padding:10px 12px;border-radius:6px;outline:none;transition:border-color .15s,box-shadow .15s}
+input:focus{border-color:var(--bl);box-shadow:0 0 0 3px rgba(121,192,255,.12)}
+input[type=range]{width:100%;accent-color:var(--bl)}
+.radio-row{display:flex;gap:6px;flex-wrap:wrap}
+.radio{display:inline-flex;align-items:center;gap:5px;background:var(--bg3);border:1px solid var(--bd);padding:6px 12px;border-radius:6px;font-size:12px;text-transform:none;letter-spacing:0;cursor:pointer;margin:0;color:var(--tx);transition:.15s}
+.radio:hover{border-color:rgba(121,192,255,.4)}
+.radio input{accent-color:var(--bl)}
+.btn-row{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:6px;font-family:inherit;font-size:13px;font-weight:500;padding:10px 18px;border-radius:6px;border:1px solid transparent;cursor:pointer;transition:all .15s}
+.btn.primary{background:linear-gradient(135deg,#1f6feb,#0d419d);color:#fff;box-shadow:0 0 12px rgba(31,111,235,.3)}
+.btn.primary:hover{background:linear-gradient(135deg,#2a7fff,#1f6feb);box-shadow:0 0 18px rgba(31,111,235,.5);transform:translateY(-1px)}
+.btn.danger{background:linear-gradient(135deg,#da3633,#8b1d1a);color:#fff}
+.btn.danger:hover{background:linear-gradient(135deg,#f85149,#da3633);transform:translateY(-1px)}
+.btn.ghost{background:transparent;color:var(--bl);border-color:rgba(121,192,255,.35)}
+.btn.ghost:hover{background:rgba(121,192,255,.08);border-color:var(--bl);box-shadow:0 0 12px rgba(121,192,255,.2)}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.stat{background:var(--bg3);border:1px solid var(--bd);padding:12px;border-radius:8px;text-align:center;transition:.2s}
+.stat:hover{border-color:rgba(121,192,255,.3);box-shadow:0 0 12px rgba(121,192,255,.1)}
+.stat span{display:block;font-size:20px;font-weight:600;background:linear-gradient(135deg,#79c0ff,#1f6feb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.2}
+.stat label{margin:4px 0 0;font-size:10px;color:var(--mu);text-transform:uppercase}
+.status-row{display:flex;align-items:center;gap:8px;padding:10px;background:var(--bg3);border:1px solid var(--bd);border-radius:6px;margin-bottom:12px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--mu);transition:all .2s}
+.dot.on{background:var(--bl);box-shadow:0 0 10px var(--bl),0 0 20px rgba(121,192,255,.5);animation:pulse 1.5s infinite}
+@keyframes pulse{50%{opacity:.5}}
+.log{background:var(--bg3);border:1px solid var(--bd);border-radius:6px;padding:12px;font-size:11px;color:var(--bl);max-height:340px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;font-family:inherit}
+.log::-webkit-scrollbar{width:8px}
+.log::-webkit-scrollbar-thumb{background:var(--bd);border-radius:4px}
+.recon-result{margin-top:16px;font-size:12px}
+.recon-result h3{color:var(--pu);font-size:13px;margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--bd)}
+.recon-result .kv{display:grid;grid-template-columns:200px 1fr;gap:4px 12px;margin-bottom:8px}
+.recon-result .kv b{color:var(--bl);font-weight:500}
+.recon-result .kv span{word-break:break-all}
+.recon-result .warn{color:var(--rd)}
+.recon-result .ok{color:var(--gr)}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{text-align:left;padding:10px 8px;color:var(--mu);font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--bd);font-weight:500}
+tbody td{padding:10px 8px;border-bottom:1px solid rgba(31,52,80,.5)}
+tbody tr:hover{background:rgba(121,192,255,.04)}
+.btn-mini{background:transparent;border:1px solid var(--bd);color:var(--mu);font-family:inherit;font-size:10px;padding:3px 8px;border-radius:4px;cursor:pointer;transition:.15s}
+.btn-mini:hover{color:var(--rd);border-color:var(--rd)}
+.captcha-box{margin-top:18px;min-height:78px}
+.muted{color:var(--mu);font-size:11px;margin-top:14px}
+.row{display:flex;gap:8px}
+.row input{flex:1}
+@media(max-width:1100px){.grid-2{grid-template-columns:1fr}}
+@media(max-width:768px){
+header{padding:10px 14px;flex-wrap:wrap}
+.logo{font-size:14px}
+nav{gap:2px}
+nav button,nav a{font-size:11px;padding:6px 8px}
+nav button span,nav a span{display:none}
+main{padding:12px}
+.grid-2{gap:12px}
+.card{padding:14px}
+.card h2{font-size:13px}
+input[type=text],input[type=number],input[type=password]{font-size:16px;padding:12px}
+.btn{flex:1;padding:12px 14px;font-size:13px;justify-content:center}
+.btn-row{gap:6px}
+.stats-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+.stat span{font-size:18px}
+.recon-result .kv{grid-template-columns:1fr;gap:2px}
+.recon-result .kv b{margin-top:6px;color:var(--mu)}
+.row{flex-direction:column;gap:6px}
+.row .btn{width:100%}
+.captcha-box{transform:scale(.85);transform-origin:left}
+}
+</style>
 </head>
 <body>
 
@@ -26,53 +116,37 @@
   </div>
   <nav>
     <button data-tab="attack" class="active">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>
-      </svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
       <span>атака</span>
     </button>
     <button data-tab="recon">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>
-      </svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
       <span>разведка</span>
     </button>
     <button data-tab="proxy">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01"/>
-      </svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01"/></svg>
       <span>прокси</span>
     </button>
     <button data-tab="history">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
-      </svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
       <span>история</span>
     </button>
     <a href="/logout" class="logout" title="выход">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-        <path d="m16 17 5-5-5-5M21 12H9"/>
-      </svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></svg>
     </a>
   </nav>
 </header>
 
 <main>
-
   <section id="tab-attack" class="tab active">
     <div class="grid-2">
       <div class="card">
         <h2>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#79c0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>
-          </svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#79c0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
           запуск атаки
         </h2>
-
         <label>цель (url / ip / host)</label>
         <input id="target" type="text" placeholder="http://example.com или 1.2.3.4:80">
-
         <label>режим</label>
         <div class="radio-row">
           <label class="radio"><input type="radio" name="mode" value="http" checked> http</label>
@@ -81,17 +155,13 @@
           <label class="radio"><input type="radio" name="mode" value="tcp"> tcp</label>
           <label class="radio"><input type="radio" name="mode" value="mix"> mix</label>
         </div>
-
         <label>concurrency: <b id="conc-val">2000</b></label>
         <input id="conc" type="range" min="100" max="50000" value="2000" step="100">
-
         <label>длительность (сек)</label>
         <input id="dur" type="number" value="60" min="5" max="3600">
-
         <div class="captcha-box">
           <div class="cf-turnstile" data-sitekey="{{ sitekey }}" data-callback="onCaptcha"></div>
         </div>
-
         <div class="btn-row">
           <button id="btn-start" class="btn primary">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
@@ -102,34 +172,26 @@
             стоп
           </button>
           <button id="btn-scan" class="btn ghost">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>
-            </svg>
-            скан эндпоинтов
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            скан
           </button>
         </div>
       </div>
-
       <div class="card">
         <h2>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#79c0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-          </svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#79c0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           статистика
         </h2>
-
         <div class="stats-grid">
           <div class="stat"><span id="st-sent">0</span><label>отправлено</label></div>
           <div class="stat"><span id="st-rps">0</span><label>rps</label></div>
           <div class="stat"><span id="st-err">0</span><label>ошибок</label></div>
           <div class="stat"><span id="st-time">0с</span><label>время</label></div>
         </div>
-
         <div class="status-row">
           <span class="dot" id="st-dot"></span>
           <span id="st-text">простой</span>
         </div>
-
         <label>лог</label>
         <pre id="log" class="log"></pre>
       </div>
@@ -139,17 +201,13 @@
   <section id="tab-recon" class="tab">
     <div class="card">
       <h2>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#79c0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>
-        </svg>
-        разведка домена / IP
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#79c0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        разведка
       </h2>
       <div class="row">
         <input id="recon-host" type="text" placeholder="example.com или 1.2.3.4">
         <button id="btn-recon" class="btn primary">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>
-          </svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
           анализ
         </button>
       </div>
@@ -160,9 +218,7 @@
   <section id="tab-proxy" class="tab">
     <div class="card">
       <h2>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#79c0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01"/>
-        </svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#79c0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01"/></svg>
         прокси-пул
       </h2>
       <div class="stats-grid">
@@ -173,15 +229,11 @@
       </div>
       <div class="btn-row">
         <button id="btn-pr-load" class="btn primary">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-          </svg>
-          загрузить источники
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          загрузить
         </button>
         <button id="btn-pr-check" class="btn ghost">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 6 9 17l-5-5"/>
-          </svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           проверить
         </button>
       </div>
@@ -192,9 +244,7 @@
   <section id="tab-history" class="tab">
     <div class="card">
       <h2>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#79c0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
-        </svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#79c0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
         история атак
       </h2>
       <div class="table-wrap">
@@ -212,9 +262,201 @@
       <pre id="history-log" class="log" style="margin-top:12px"></pre>
     </div>
   </section>
-
 </main>
 
-<script src="/static/app.js"></script>
+<script>
+document.querySelectorAll("nav button[data-tab]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const t = btn.dataset.tab;
+    document.querySelectorAll(".tab").forEach(s => s.classList.toggle("active", s.id === "tab-" + t));
+    if (t === "history") loadHistory();
+    if (t === "proxy") updateProxyStatus();
+  });
+});
+
+let captchaToken = "";
+window.onCaptcha = function (token) { captchaToken = token; };
+
+const targetEl = document.getElementById("target");
+const concEl   = document.getElementById("conc");
+const concVal  = document.getElementById("conc-val");
+const durEl    = document.getElementById("dur");
+const logEl    = document.getElementById("log");
+
+concEl.addEventListener("input", () => concVal.textContent = concEl.value);
+
+document.getElementById("btn-start").addEventListener("click", async () => {
+  const target = targetEl.value.trim();
+  if (!target) return alert("укажи цель");
+  const mode = document.querySelector('input[name="mode"]:checked').value;
+  const r = await fetch("/api/attack/start", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      target, mode,
+      concurrency: parseInt(concEl.value),
+      duration: parseInt(durEl.value),
+      captcha_token: captchaToken,
+    }),
+  });
+  const j = await r.json();
+  if (!j.ok) return alert("ошибка: " + (j.error || "?"));
+  logEl.textContent = "";
+});
+
+document.getElementById("btn-stop").addEventListener("click", async () => {
+  await fetch("/api/attack/stop", { method: "POST" });
+});
+
+document.getElementById("btn-scan").addEventListener("click", async () => {
+  const target = targetEl.value.trim();
+  if (!target) return alert("укажи цель");
+  const r = await fetch("/api/scan_endpoints", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url: target }),
+  });
+  const j = await r.json();
+  if (!j.ok) return alert("ошибка: " + j.error);
+  logEl.textContent = "найдено без капчи:\n" + j.found.map(f => "  [" + f.status + "] " + f.url).join("\n");
+});
+
+const evt = new EventSource("/api/logs/stream");
+evt.onmessage = (e) => {
+  const d = JSON.parse(e.data);
+  if (d.line) {
+    logEl.textContent += d.line + "\n";
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+  if (d.state) {
+    document.getElementById("st-sent").textContent = d.state.sent.toLocaleString();
+    document.getElementById("st-rps").textContent  = d.state.rps.toLocaleString();
+    document.getElementById("st-err").textContent  = d.state.errors.toLocaleString();
+    document.getElementById("st-time").textContent = d.state.elapsed + "с";
+    const dot = document.getElementById("st-dot");
+    const txt = document.getElementById("st-text");
+    if (d.state.running) {
+      dot.classList.add("on");
+      txt.textContent = d.state.mode + " → " + d.state.target + "  (" + d.state.concurrency + " потоков)";
+    } else {
+      dot.classList.remove("on");
+      txt.textContent = "простой";
+    }
+  }
+};
+
+document.getElementById("btn-recon").addEventListener("click", async () => {
+  const host = document.getElementById("recon-host").value.trim();
+  if (!host) return;
+  const out = document.getElementById("recon-result");
+  out.innerHTML = "<p class='muted'>анализирую...</p>";
+  const r = await fetch("/api/recon", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ host }),
+  });
+  const j = await r.json();
+  if (!j.ok) { out.innerHTML = "<p class='warn'>" + j.error + "</p>"; return; }
+  const d = j.data;
+  if (d.error) { out.innerHTML = "<p class='warn'>" + d.error + "</p>"; return; }
+  const w = d.whois || {}, info = d.ip_info || {}, st = d.status || {};
+  out.innerHTML = `
+    <h3>whois</h3>
+    <div class="kv">
+      <b>создан</b><span>${w.created || "—"}</span>
+      <b>истекает</b><span>${w.expires || "—"}</span>
+      <b>обновлён</b><span>${w.updated || "—"}</span>
+      <b>регистратор</b><span>${w.registrar || "—"}</span>
+      <b>страна</b><span>${w.country || "—"}</span>
+      <b>орг</b><span>${w.org || "—"}</span>
+      <b>name servers</b><span>${(w.ns || []).join(", ") || "—"}</span>
+    </div>
+    <h3>ip / хост</h3>
+    <div class="kv">
+      <b>IP</b><span>${d.ip}</span>
+      <b>reverse dns</b><span>${d.reverse_dns}</span>
+      <b>страна</b><span>${info.country || "—"}</span>
+      <b>город</b><span>${info.city || "—"}</span>
+      <b>провайдер (isp)</b><span>${info.isp || "—"}</span>
+      <b>организация</b><span>${info.org || "—"}</span>
+      <b>asn</b><span>${info.asn || "—"}</span>
+      <b>хостинг</b><span>${info.hosting ? "да" : "нет"}</span>
+      <b>proxy/vpn</b><span>${info.proxy ? "да" : "нет"}</span>
+    </div>
+    <h3>dns</h3>
+    <div class="kv">${Object.entries(d.dns || {}).map(([k, v]) => `<b>${k}</b><span>${v.join(", ")}</span>`).join("") || "<b>—</b><span>пусто</span>"}</div>
+    <h3>статус</h3>
+    <div class="kv">
+      <b>живой</b><span class="${st.alive === "да" ? "ok" : "warn"}">${st.alive}</span>
+      <b>задержка</b><span>${st.latency_ms} мс</span>
+      <b>cdn</b><span>${st.cdn}</span>
+      <b>под атакой</b><span class="${st.under_attack?.includes("норм") ? "ok" : "warn"}">${st.under_attack}</span>
+      <b>последняя атака (нами)</b><span>${st.last_attack}</span>
+    </div>`;
+});
+
+document.getElementById("btn-pr-load").addEventListener("click", async () => {
+  const r = await fetch("/api/proxy/load", { method: "POST" });
+  const j = await r.json();
+  alert("загружено: " + j.loaded + " прокси");
+  updateProxyStatus();
+});
+
+document.getElementById("btn-pr-check").addEventListener("click", async () => {
+  const r = await fetch("/api/proxy/check", { method: "POST" });
+  const j = await r.json();
+  alert(j.ok ? "проверка запущена (1-2 мин)" : j.error);
+});
+
+async function updateProxyStatus() {
+  const r = await fetch("/api/proxy/status");
+  const j = await r.json();
+  document.getElementById("pr-loaded").textContent   = j.loaded.toLocaleString();
+  document.getElementById("pr-alive").textContent    = j.alive.toLocaleString();
+  document.getElementById("pr-dead").textContent     = j.dead.toLocaleString();
+  document.getElementById("pr-checking").textContent = j.checking ? "идёт..." : "готов";
+}
+setInterval(() => {
+  if (document.getElementById("tab-proxy").classList.contains("active")) updateProxyStatus();
+}, 3000);
+
+async function loadHistory() {
+  const r = await fetch("/api/attacks");
+  const rows = await r.json();
+  const tb = document.getElementById("history-body");
+  tb.innerHTML = "";
+  rows.forEach(a => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${a.id}</td><td>${a.target}</td><td>${a.mode}</td>
+      <td>${a.concurrency}</td><td>${a.duration}</td>
+      <td>${(a.sent || 0).toLocaleString()}</td>
+      <td>${(a.errors || 0).toLocaleString()}</td>
+      <td>${(a.started_at || "").slice(0, 19).replace("T", " ")}</td>
+      <td>${a.status}</td>
+      <td>
+        <button class="btn-mini" data-id="${a.id}" data-act="logs">логи</button>
+        <button class="btn-mini" data-id="${a.id}" data-act="del">×</button>
+      </td>`;
+    tb.appendChild(tr);
+  });
+  tb.querySelectorAll("button[data-act='logs']").forEach(b => {
+    b.addEventListener("click", async () => {
+      const r = await fetch(`/api/attacks/${b.dataset.id}/logs`);
+      const j = await r.json();
+      document.getElementById("history-log").textContent = "#" + b.dataset.id + " logs:\n" + (j.logs || []).join("\n");
+    });
+  });
+  tb.querySelectorAll("button[data-act='del']").forEach(b => {
+    b.addEventListener("click", async () => {
+      if (!confirm("удалить #" + b.dataset.id + "?")) return;
+      await fetch(`/api/attacks/${b.dataset.id}`, { method: "DELETE" });
+      loadHistory();
+    });
+  });
+}
+</script>
 </body>
-                          </html>
+</html>
