@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hoster</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M17.5 19a4.5 4.5 0 0 0 .5-8.97A6 6 0 0 0 6.34 9.5 5 5 0 0 0 7 19h10.5z' fill='%2379c0ff' stroke='%231f6feb' stroke-width='1.5'/></svg>">
+<link rel="stylesheet" href="/static/style.css">
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#logo-grad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <defs>
+        <linearGradient id="logo-grad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#79c0ff"/>
+          <stop offset="100%" stop-color="#1f6feb"/>
+        </linearGradient>
+      </defs>
+      <path d="M17.5 19a4.5 4.5 0 0 0 .5-8.97A6 6 0 0 0 6.34 9.5 5 5 0 0 0 7 19h10.5z"/>
+    </svg>
+    <span class="brand">hoster</span>
+    <span class="badge">{{ 'uvloop' if uvloop else 'asyncio' }}</span>
+  </div>
+  <nav>
+    <button data-tab="attack" class="active">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>
+      </svg>
+      <span>атака</span>
+    </button>
+    <button data-tab="recon">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>
+      </svg>
+      <span>разведка</span>
+    </button>
+    <button data-tab="proxy">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01"/>
+      </svg>
+      <span>прокси</span>
+    </button>
+    <button data-tab="history">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+      </svg>
+      <span>история</span>
+    </button>
+    <a href="/logout" class="logout" title="выход">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <path d="m16 17 5-5-5-5M21 12H9"/>
+      </svg>
+    </a>
+  </nav>
+</header>
+
+<main>
+
+  <section id="tab-attack" class="tab active">
+    <div class="grid-2">
+      <div class="card">
+        <h2>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#79c0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+          запуск атаки
+        </h2>
+
+        <label>цель (url / ip / host)</label>
+        <input id="target" type="text" placeholder="http://example.com или 1.2.3.4:80">
+
+        <label>режим</label>
+        <div class="radio-row">
+          <label class="radio"><input type="radio" name="mode" value="http" checked> http</label>
+          <label class="radio"><input type="radio" name="mode" value="http2"> http2</label>
+          <label class="radio"><input type="radio" name="mode" value="udp"> udp</label>
+          <label class="radio"><input type="radio" name="mode" value="tcp"> tcp</label>
+          <label class="radio"><input type="radio" name="mode" value="mix"> mix</label>
+        </div>
+
+        <label>concurrency: <b id="conc-val">2000</b></label>
+        <input id="conc" type="range" min="100" max="50000" value="2000" step="100">
+
+        <label>длительность (сек)</label>
+        <input id="dur" type="number" value="60" min="5" max="3600">
+
+        <div class="captcha-box">
+          <div class="cf-turnstile" data-sitekey="{{ sitekey }}" data-callback="onCaptcha"></div>
+        </div>
+
+        <div class="btn-row">
+          <button id="btn-start" class="btn primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            старт
+          </button>
+          <button id="btn-stop" class="btn danger">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"/></svg>
+            стоп
+          </button>
+          <button id="btn-scan" class="btn ghost">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+            скан эндпоинтов
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#79c0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+          статистика
+        </h2>
+
+        <div class="stats-grid">
+          <div class="stat"><span id="st-sent">0</span><label>отправлено</label></div>
+          <div class="stat"><span id="st-rps">0</span><label>rps</label></div>
+          <div class="stat"><span id="st-err">0</span><label>ошибок</label></div>
+          <div class="stat"><span id="st-time">0с</span><label>время</label></div>
+        </div>
+
+        <div class="status-row">
+          <span class="dot" id="st-dot"></span>
+          <span id="st-text">простой</span>
+        </div>
+
+        <label>лог</label>
+        <pre id="log" class="log"></pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-recon" class="tab">
+    <div class="card">
+      <h2>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#79c0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>
+        </svg>
+        разведка домена / IP
+      </h2>
+      <div class="row">
+        <input id="recon-host" type="text" placeholder="example.com или 1.2.3.4">
+        <button id="btn-recon" class="btn primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>
+          </svg>
+          анализ
+        </button>
+      </div>
+      <div id="recon-result" class="recon-result"></div>
+    </div>
+  </section>
+
+  <section id="tab-proxy" class="tab">
+    <div class="card">
+      <h2>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#79c0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01"/>
+        </svg>
+        прокси-пул
+      </h2>
+      <div class="stats-grid">
+        <div class="stat"><span id="pr-loaded">0</span><label>загружено</label></div>
+        <div class="stat"><span id="pr-alive">0</span><label>живых</label></div>
+        <div class="stat"><span id="pr-dead">0</span><label>мёртвых</label></div>
+        <div class="stat"><span id="pr-checking">—</span><label>статус</label></div>
+      </div>
+      <div class="btn-row">
+        <button id="btn-pr-load" class="btn primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+          </svg>
+          загрузить источники
+        </button>
+        <button id="btn-pr-check" class="btn ghost">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6 9 17l-5-5"/>
+          </svg>
+          проверить
+        </button>
+      </div>
+      <p class="muted">источники: proxmint · shiftytr · rdavydov · monosans · jetkai</p>
+    </div>
+  </section>
+
+  <section id="tab-history" class="tab">
+    <div class="card">
+      <h2>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#79c0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+        </svg>
+        история атак
+      </h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>цель</th><th>режим</th><th>потоки</th>
+              <th>сек</th><th>отправлено</th><th>ошибок</th>
+              <th>старт</th><th>статус</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="history-body"></tbody>
+        </table>
+      </div>
+      <pre id="history-log" class="log" style="margin-top:12px"></pre>
+    </div>
+  </section>
+
+</main>
+
+<script src="/static/app.js"></script>
+</body>
+                          </html>
