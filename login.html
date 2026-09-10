@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hoster — вход</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M17.5 19a4.5 4.5 0 0 0 .5-8.97A6 6 0 0 0 6.34 9.5 5 5 0 0 0 7 19h10.5z' fill='%2379c0ff' stroke='%231f6feb' stroke-width='1.5'/></svg>">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="login-page">
+
+<form method="post" class="login-card">
+  <h1 class="login-title">
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="url(#lg)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <defs>
+        <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#79c0ff"/>
+          <stop offset="100%" stop-color="#1f6feb"/>
+        </linearGradient>
+      </defs>
+      <path d="M17.5 19a4.5 4.5 0 0 0 .5-8.97A6 6 0 0 0 6.34 9.5 5 5 0 0 0 7 19h10.5z"/>
+    </svg>
+    <span>hoster</span>
+  </h1>
+  <p class="sub">войди, чтобы продолжить</p>
+  <input type="password" name="password" placeholder="пароль" autofocus required>
+  {% if error %}<div class="err">{{ error }}</div>{% endif %}
+  <button type="submit">войти</button>
+</form>
+
+</body>
+</html>
